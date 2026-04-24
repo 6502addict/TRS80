@@ -1,0 +1,247 @@
+-- =============================================================================
+-- Module  : video_ctrl
+-- Purpose : VGA timing controller with character grid management
+-- =============================================================================
+--
+-- Generates standard VGA sync signals (hsync, vsync) and all control signals
+-- needed to drive a character-based video display.
+--
+-- Default timing: 640x480 @ 60Hz (pixel clock 25.175 MHz)
+--   htotal = hswidth + hbp + hdisp + hfp = 96 + 48 + 640 + 16 = 800
+--   vtotal = vswidth + vbp + vdisp + vfp =  2 + 33 + 480 + 10 = 525
+--
+-- Two display modes selectable via ctrl(0):
+--   40-col : 40 characters x 24 rows, 16 pixels/char, 9 or 8 scanlines/row
+--   80-col : 80 characters x 24 rows,  8 pixels/char, 9 or 8 scanlines/row
+--
+-- Two rendering modes selectable via ctrl(1):
+--   text mode    : 9 scanlines per row (sline 0..8), sline=8 is a blank inter-row line
+--   graphic mode : 8 scanlines per row (sline 0..7), no blank inter-row line
+--
+-- The character grid is vertically centered inside the 480-line display area.
+-- Top and bottom margins are output as blank pixels.
+--
+-- For each character cell, load_sr is asserted one character-width ahead of
+-- the first pixel, giving downstream logic time to load the shift register.
+-- address and row are presented at the same time as load.
+--
+-- Output signals:
+--   enable   : high when current pixel is inside the 640x480 active window
+--   blank    : high when inside the window but nothing to draw (margins or inter-row gap)
+--   load  r  : strobe to load the shift register for the next character cell
+--   address  : character RAM address (vcpos * cols + hcpos)
+--   row      : scanline index within the current character cell (0..7 or 0..8)
+-- =============================================================================
+
+library ieee;
+    use ieee.std_logic_1164.all;
+    use ieee.numeric_std.all;
+
+    -- ctrl register bit map:
+    -- bit 0 : mode80   0 = 40 col,    1 = 80 col
+    -- bit 1 : graphic  0 = text mode, 1 = graphic mode (no extra blank line between rows)
+    -- bit 3,2 : color  00 = green/black, 01 = amber/black, 10 = white/black, 11 = color mode
+
+entity video_ctrl IS
+    generic(
+        htotal  : integer   := 800;                              -- total horizontal pixels per line (visible + blanking)
+        hdisp   : integer   := 640;                              -- horizontal visible pixels       
+        hpol    : std_logic := '0';                              -- hsync polarity ('0' = active low, '1' = active high)
+        hswidth : integer   := 96;                               -- hsync pulse width in pixels
+        hfp     : integer   := 16;                               -- horizontal front porch in pixels (between end of display and sync)
+        hbp     : integer   := 48;                               -- horizontal back porch in pixels  (between sync and start of display)
+        vtotal  : integer   := 525;                              -- total lines per frame (visible + blanking)
+        vdisp   : integer   := 480;                              -- vertical visible lines
+        vpol    : std_logic := '0';                              -- vsync polarity ('0' = active low, '1' = active high)
+        vswidth : integer   := 2;                                -- vsync pulse width in lines
+        vbp     : integer   := 33;                               -- vertical back porch in lines  (between sync and start of display)
+        vfp     : integer   := 10                                -- vertical front porch in lines (between end of display and sync)
+    );
+    port(
+        reset_n     : in  std_logic;                             -- reset signal   
+        clock       : in  std_logic;                             -- video clock 
+        ctrl        : in  std_logic_vector(7 downto 0);          -- configuration register
+        vsync       : out std_logic;                             -- vertical sync
+        hsync       : out std_logic;                             -- horizontal sync
+        enable      : out std_logic;                             -- pixel valid: high when hpos and vpos are inside the 640x480 active window                           
+        blank       : out std_logic;                             -- blank pixel: high when inside the window but nothing to draw (margins or inter-row gap)
+        load        : out std_logic;                             -- load registers
+        row         : out std_logic_vector(2 downto 0);          -- row inside the font
+        address     : out std_logic_vector(9 downto 0)           -- start address of the charater in font  
+    );
+end video_ctrl;
+
+architecture behavior OF video_ctrl IS
+begin
+    process (reset_n, clock)
+        variable hpos      : integer range 0 TO htotal - 1 := 0; -- current horizontal pixel counter (0..htotal-1)
+        variable vpos      : integer range 0 TO vtotal - 1 := 0; -- current vertical line counter  (0..vtotal-1)
+        variable next_evt  : integer range 0 to htotal - 1 := 0; -- hpos value at which the next SR load must fire
+        variable hcpos     : integer range 0 to 79;              -- current character column index (0..79 in 80-col, 0..39 in 40-col)
+        variable vcpos     : integer range 0 to 25;              -- current character row index (0..24, max 25 rows)
+        variable vline     : integer range 0 to vdisp - 1;       -- visible line index within the active display area (unused, reserved)
+        variable sline     : integer range 0 to 8;               -- scanline index within the current character cell (0..7 gfx, 0..8 text)
+        variable scanlines : integer range 0 to 8;               -- last sline value for the current mode (7=gfx, 8=text with blank line)
+        variable tmargin   : integer range 0 to htotal - 1;      -- vpos value of the first active character row (top centering margin)
+        variable bmargin   : integer range 0 to htotal - 1;      -- vpos value past the last active character row (bottom centering margin)
+
+
+
+        -- Horizontal display window boundaries (pixel clock units)
+        --   shdisp : first visible pixel = hsync width + back porch
+        --   ehdisp : last+1 visible pixel = shdisp + display width
+        constant shdisp : integer := hswidth + hbp;          -- 96 + 48       = 144
+        constant ehdisp : integer := hswidth + hbp + hdisp;  -- 96 + 48 + 640 = 784
+
+        -- Vertical display window boundaries (line units)
+        --   svdisp : first visible line = vsync width + back porch
+        --   evdisp : last+1 visible line = svdisp + display height
+        constant svdisp : integer := vswidth + vbp;          -- 2 + 33        = 35
+        constant evdisp : integer := vswidth + vbp + vdisp;  -- 2 + 33 + 480  = 515
+
+        -- Character cell width in pixel clocks
+        --   80-col: 640 pixels / 80 columns = 8  px/char
+        --   40-col: 640 pixels / 40 columns = 16 px/char
+        constant char_w_40 : integer := 16;
+
+        -- Character cell height in scanlines
+        -- Note: vpos advances by 2 (only even lines counted), so
+        --   effective vertical resolution = vdisp / 2 = 240 lines
+        -- text mode:    sline 0..8 => 9 lines, sline=8 is a blank inter-row line
+        -- graphic mode: sline 0..7 => 8 lines, no blank inter-row line
+        constant char_h_text : integer := 8;  -- last sline value (= blank line index)
+        constant char_h_gfx  : integer := 7;  -- last sline value in graphic mode
+
+        -- Number of character columns (used for address computation)
+        constant cols_40 : integer := 40;
+
+        -- Shift register preload offset (pixels before shdisp)
+        -- The SR must be loaded N pixels ahead so the first pixel is ready at hpos=shdisp.
+        --   preload = char_width + 1 pipeline cycle
+        --   80-col: 8  + 1 = 9
+        --   40-col: 16 + 1 = 17
+        constant preload_40 : integer := char_w_40 + 1;  -- 17
+
+        -- Vertical centering margins for the active character display area.
+        -- vpos counts at twice the scanline rate (only even vpos ticks char logic),
+        -- so offsets are in vpos units (2 vpos units = 1 visible line).
+        --
+        -- graphic mode: 24 rows x 8 lines x 2 = 384 vpos; (480-384)/2 ~ 40/42 (top/bot)
+        -- text mode:    24 rows x 9 lines x 2 = 432 vpos; (480-432)/2 ~ 14/18 (top/bot)
+        constant tmargin_gfx_offset : integer := 40;
+        constant bmargin_gfx_offset : integer := 42;
+        constant tmargin_txt_offset : integer := 14;
+        constant bmargin_txt_offset : integer := 18;
+
+    BEGIN
+        -- Select scanline count and vertical centering margins based on display mode
+        if ctrl(1) = '1' then
+            -- graphic mode: 8 scanlines per row (sline 0..7)
+            scanlines := char_h_gfx;
+            tmargin   := svdisp + tmargin_gfx_offset;
+            bmargin   := evdisp - bmargin_gfx_offset;
+        else
+            -- text mode: 9 scanlines per row (sline 0..8, sline=8 is blank)
+            scanlines := char_h_text;
+            tmargin   := svdisp + tmargin_txt_offset;
+            bmargin   := evdisp - bmargin_txt_offset;
+        end if;
+
+        if (reset_n = '0') then
+            hpos     := 0;
+            vpos     := 0;
+            sline    := 0;
+            hcpos    := 0;
+            vcpos    := 0;
+            hsync    <= not hpol;
+            vsync    <= not vpol;
+            enable   <= '0';
+            blank    <= '0';
+
+        elsif rising_edge(clock) then
+            -- Advance horizontal counter; on end of line, advance vertical counter
+            if (hpos < htotal - 1) then
+                hpos := hpos + 1;
+            else
+                hpos := 0;
+                -- First SR load event is one char_width before the display start
+                next_evt := shdisp - preload_40;  -- 40-col: 144 - 17 = 127
+
+                if (vpos < vtotal - 1) then
+                    vpos := vpos + 1;
+                    -- Character row logic runs only on even vpos lines (half-rate)
+                    if vpos mod 2 = 0 then
+                        if (vpos >= tmargin) then
+                            -- Inside active character area: advance scanline then row
+                            if sline < scanlines then
+                                sline := sline + 1;
+                            else
+                                sline := 0;
+                                if vcpos < 25 then
+                                    vcpos := vcpos + 1;
+                                end if;
+                            end if;
+                        else
+                            -- Above top margin: hold counters at zero
+                            vcpos := 0;
+                            sline := 0;
+                        end if;
+                    end if;
+                else
+                    vpos := 0;
+                end if;
+            end if;
+
+            -- vsync: active (hpol polarity) during the first vswidth lines
+            if (vpos < vswidth) then
+                vsync <= NOT vpol;
+            else
+                vsync <= vpol;
+            end if;
+            -- hsync: active (hpol polarity) during the first hswidth pixels
+            if (hpos < hswidth) then
+                hsync <= not hpol;
+            else
+                hsync <= hpol;
+            end if;
+
+            -- Active vertical display area
+            if ((vpos >= svdisp) and (vpos < evdisp)) then
+
+                -- Pixel enable: high only within the horizontal display window
+                if (hpos >= shdisp) and (hpos < ehdisp) then
+                    enable <= '1';
+                else
+                    enable <= '0';
+                end if;
+
+                -- Horizontal character column index from current pixel position
+                hcpos := (hpos - (shdisp - 1)) / char_w_40;  -- 40-col: / 16
+                
+                -- Blank: active on the inter-row blank scanline (sline=8, text mode only)
+                -- or when outside the vertical character margin
+                if (sline = char_h_text) or (vpos < tmargin) or (vpos >= bmargin) then
+                    blank <= '1';
+                else
+                    blank <= '0';
+                end if;
+
+                -- Shift register load: fires one char_width before each character cell
+                if hpos = next_evt then
+                    -- Compute character RAM address = row * cols + col
+                    address <= std_logic_vector(to_unsigned(vcpos * cols_40 + hcpos, 10));
+                    row     <= std_logic_vector(to_unsigned(sline, 3));
+                    load <= '1';
+                    -- Advance next_evt by one character cell width
+                    if hpos < ehdisp then
+                        next_evt := next_evt + char_w_40;  -- 40-col: +16
+                    end if;
+                else
+                    load <= '0';
+                end if;
+            end if;
+        end if;
+    end process;
+
+end behavior;
+
