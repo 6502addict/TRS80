@@ -64,29 +64,6 @@ architecture struct of TRS80 is
             clk_out  : out std_logic
         );
     end component;
-
-
-    component mc6850_uart is
-        port (
-            phi2        : in  std_logic;                     -- 6502 phi2 clock
-            serial_clk  : in  std_logic;                     -- 16x baud clock
-            reset_n     : in  std_logic;
-
-            -- CPU interface
-            cs_n        : in  std_logic;
-            rw          : in  std_logic;
-            address     : in  std_logic;
-            data_in     : in  std_logic_vector(7 downto 0);
-            data_out    : out std_logic_vector(7 downto 0);
-
-            -- Interrupt output
-            irq_n       : out std_logic;
-
-            -- Physical UART interface
-            rx          : in  std_logic;
-            tx          : out std_logic
-        );
-    end component;
     
     component EBR_RAM is
         generic (
@@ -102,25 +79,16 @@ architecture struct of TRS80 is
         );
     end component;    
     
-    component i8251_uart is
-    port (
-        clk        : in  std_logic;        -- CPU clock
-        serial_clk : in  std_logic;        -- 16x baud clock
-        reset_n    : in  std_logic;
-        cs_n       : in  std_logic;
-        cd         : in  std_logic;        -- 0=data, 1=control/status
-        rd_n       : in  std_logic;
-        wr_n       : in  std_logic;
-        data_in    : in  std_logic_vector(7 downto 0);
-        data_out   : out std_logic_vector(7 downto 0);
-        txrdy      : out std_logic;
-        rxrdy      : out std_logic;
-        rx         : in  std_logic;
-        tx         : out std_logic
-    );
+    component model1v1 is
+        port (
+            clock:    in std_logic;
+            address:  in std_logic_vector(11 downto 0); 
+            cs_n:     in std_logic;
+            data_out: out std_logic_vector(7 downto 0)
+        );
     end component;
 
-    component model1v1 is
+    component diag is
         port (
             clock:    in std_logic;
             address:  in std_logic_vector(11 downto 0); 
@@ -170,11 +138,12 @@ architecture struct of TRS80 is
             areset      : IN STD_LOGIC  := '0';
             inclk0      : IN STD_LOGIC  := '0';
             c0          : OUT STD_LOGIC ;
+            c1          : OUT STD_LOGIC ;
             locked      : OUT STD_LOGIC 
         );
     end component;
 
-    component video_screen is
+    component trs80_screen is
         generic(
             htotal      :   integer   := 800;
             hdisp       :   integer   := 640;
@@ -250,17 +219,11 @@ architecture struct of TRS80 is
     end component;   
     
     component trs80_serial is
-        generic (
-            -- format encoding (same as uart_send/uart_receive):
-            -- bit2: 0=7bit, 1=8bit
-            -- bit1: parity enable (8bit) or stop bits (7bit: 1=1stop, 0=2stop)
-            -- bit0: 0=even, 1=odd parity
-            FORMAT : std_logic_vector(2 downto 0) := "100"  -- 8N1 default
-        );
         port (
             cpu_clk    : in  std_logic;
             serial_clk : in  std_logic;
             reset_n    : in  std_logic;
+            dipsw      : in  std_logic_vector(7 downto 0);
             cs_n       : in  std_logic;
             address    : in  std_logic_vector(1 downto 0);
             rd_n       : in  std_logic;
@@ -389,17 +352,18 @@ begin
     pll1: pll                          port map(areset       => not reset_n,
                                                 inclk0       => MAX10_CLK1_50,
                                                 c0           => video_clk,
+                                                c1           => serial_clk,
                                                 locked       => open);
 
-    div1: clock_divider	            generic map(divider      => 50_000_000/50_000_000)
+    div1: clock_divider	            generic map(divider      => 50_000_000/1_750_000)
                                        port map(reset_n      => reset_n, 
                                                 clk_in       => MAX10_CLK1_50,
                                                 clk_out      => cpu_clk);
 
-    div2: clock_divider	            generic map(divider      => 50_000_000/(115200*16))
-                                       port map(reset_n      => reset_n, 
-                                                clk_in       => MAX10_CLK1_50,
-                                                clk_out      => serial_clk);
+--    div2: clock_divider	            generic map(divider      => 50_000_000/(115200*16))
+--                                       port map(reset_n      => reset_n, 
+--                                                clk_in       => MAX10_CLK1_50,
+--                                                clk_out      => serial_clk);
 
     div3: clock_divider	            generic map(divider      => 50_000_000/40)
                                        port map(reset_n      => reset_n, 
@@ -452,15 +416,20 @@ begin
                                                 di           => data_bus,
                                                 do           => cpu_data);
                                                 
+    rom1: diag                         port map(clock        => cpu_clk,
+                                                address      => address_bus(11 downto 0),
+                                                cs_n         => model1_cs_n,        
+                                                data_out     => model1_data);                                                
+                                                
 --    rom1: model1v1                     port map(clock        => cpu_clk,
 --                                                address      => address_bus(11 downto 0),
 --                                                cs_n         => model1_cs_n,        
 --                                                data_out     => model1_data);
                                             
-    rom1: model1v2                     port map(clock        => cpu_clk,
-                                                address      => address_bus(13 downto 0),
-                                                cs_n         => model1_cs_n,        
-                                                data_out     => model1_data);
+--    rom1: model1v2                     port map(clock        => cpu_clk,
+--                                                address      => address_bus(13 downto 0),
+--                                                cs_n         => model1_cs_n,        
+--                                                data_out     => model1_data);
 
     mon: trs80mon                      port map(clock        => cpu_clk,
                                                 address      => address_bus(10 downto 0),
@@ -502,7 +471,7 @@ begin
                                                 motor        => motor,
                                                 video_mode   => video_mode);
                   
-   video: video_screen              generic map(htotal  => 1056,   -- total horizontal pixels per line (visible + blanking)
+   video: trs80_screen              generic map(htotal  => 1056,   -- total horizontal pixels per line (visible + blanking)
                                                 hdisp   =>  800,   -- horizontal visible pixels
                                                 hpol    =>  '1',   -- hsync polarity ('0' = active low, '1' = active high)
                                                 hswidth =>  128,   -- hsync pulse width in pixels
@@ -539,10 +508,10 @@ begin
                                                 format             => "101",
                                                 tx                 => lpt_out);
                                                 
-    ser: trs80_serial               generic map(FORMAT             => "101")
-                                       port map(cpu_clk            => cpu_clk,
+    ser: trs80_serial                  port map(cpu_clk            => cpu_clk,
                                                 serial_clk         => serial_clk,
                                                 reset_n            => reset_n,
+                                                dipsw              => "11101111",
                                                 cs_n               => serial_cs_n,
                                                 address            => address_bus(1 downto 0),
                                                 rd_n               => RD_n,
