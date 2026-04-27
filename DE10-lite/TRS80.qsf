@@ -456,7 +456,6 @@ set_global_assignment -name VHDL_FILE ../rtl/peripheral/common/uart_send.vhd
 set_global_assignment -name VHDL_FILE ../rtl/peripheral/common/uart_receive.vhd
 set_global_assignment -name VHDL_FILE ../rtl/peripheral/serial/trs80_serial.vhd
 set_global_assignment -name VHDL_FILE ../rtl/peripheral/printer/trs80_printer.vhd
-set_global_assignment -name VHDL_FILE ../rtl/peripheral/video/mcm6670p.vhd
 set_global_assignment -name VHDL_FILE ../rtl/peripheral/video/trs80_screen.vhd
 set_global_assignment -name VHDL_FILE ../rtl/peripheral/video/trs80_shifter.vhd
 set_global_assignment -name VHDL_FILE ../rtl/peripheral/video/trs80_ctrl.vhd
@@ -481,4 +480,13 @@ set_global_assignment -name SOURCE_FILE TRS80.qsf
 set_global_assignment -name VHDL_FILE TRS80.vhd
 set_global_assignment -name QIP_FILE pll.qip
 set_global_assignment -name VHDL_FILE ../rtl/roms/diag.vhd
+set_global_assignment -name VHDL_FILE ../rtl/ROMS/model1v1.vhd
+set_global_assignment -name VHDL_FILE ../rtl/peripheral/video/trs80_mcm6670.vhd
+set_global_assignment -name VHDL_FILE ../rtl/peripheral/video/trs80_mcm6674.vhd
+set_global_assignment -name VHDL_FILE ../rtl/ROMS/model1v2_12.vhd
+set_global_assignment -name VHDL_FILE ../rtl/ROMS/model1v2_13.vhd
+set_global_assignment -name VHDL_FILE ../rtl/ROMS/basic2v11.vhd
+set_global_assignment -name VHDL_FILE ../rtl/ROMS/basic2v12.vhd
+set_global_assignment -name VHDL_FILE ../rtl/ROMS/basic2v13.vhd
+set_global_assignment -name VHDL_FILE ../rtl/ROMS/basic1.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

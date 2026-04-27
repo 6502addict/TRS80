@@ -1,8 +1,16 @@
+-- =============================================================================
+-- File    : basic2v11.vhd
+-- Version : 1.1
+-- Date    : 2026-04-15
+-- Author  : didier
+-- Changes : 1.0 - Initial import of Trs80 model 1 basic level 2 Version 1.1
+-- =============================================================================
+
 library ieee;
     use ieee.std_logic_1164.all;
     use ieee.numeric_std.all;
 
-entity model1v2 is
+entity basic2v11 is
     port (
         clock:    in std_logic;
         address:  in std_logic_vector(13 downto 0); 
@@ -11,7 +19,7 @@ entity model1v2 is
     );
 end entity;
 
-architecture rtl of model1v2 is
+architecture rtl of basic2v11 is
     -- ROM from $0000 to $3FFF (16384 bytes)
     type rom_type is array(0 to 16383) of std_logic_vector(7 downto 0);
     signal rom : rom_type := (

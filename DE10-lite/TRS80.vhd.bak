@@ -79,6 +79,15 @@ architecture struct of TRS80 is
         );
     end component;    
     
+    component model1v1 is
+        port (
+            clock:    in std_logic;
+            address:  in std_logic_vector(11 downto 0); 
+            cs_n:     in std_logic;
+            data_out: out std_logic_vector(7 downto 0)
+        );
+    end component;
+
     component diag is
         port (
             clock:    in std_logic;
@@ -97,34 +106,7 @@ architecture struct of TRS80 is
         );
     end component;
     
-    component basic1 is
-        port (
-            clock:    in std_logic;
-            address:  in std_logic_vector(11 downto 0); 
-            cs_n:     in std_logic;
-            data_out: out std_logic_vector(7 downto 0)
-        );
-    end component;
-
-    component basic2v11 is
-        port (
-            clock:    in std_logic;
-            address:  in std_logic_vector(13 downto 0); 
-            cs_n:     in std_logic;
-            data_out: out std_logic_vector(7 downto 0)
-        );
-    end component;
-
-    component basic2v12 is
-        port (
-            clock:    in std_logic;
-            address:  in std_logic_vector(13 downto 0); 
-            cs_n:     in std_logic;
-            data_out: out std_logic_vector(7 downto 0)
-        );
-    end component;
-
-    component basic2v13 is
+    component model1v2 is
         port (
             clock:    in std_logic;
             address:  in std_logic_vector(13 downto 0); 
@@ -180,7 +162,6 @@ architecture struct of TRS80 is
             reset_n     : in  std_logic;
             video_clock : in  std_logic;
             mode        : in  std_logic;
-            lowercase   : in  std_logic;
             phi2        : in  std_logic;
             rw          : in  std_logic;
             address_bus : in  std_logic_vector(15 downto 0);
@@ -299,62 +280,54 @@ architecture struct of TRS80 is
         );
     end component;
     
-    signal reset_n        : std_logic;
-    signal cpu_reset_n    : std_logic;
-    signal cpu_reset      : std_logic;
+    signal reset_n       : std_logic;
+    signal cpu_reset_n   : std_logic;
+    signal cpu_reset     : std_logic;
 
-    signal WR_n           : std_logic;
-    signal RD_n           : std_logic;
-    signal address_bus    : std_logic_vector(15 downto 0);
-    signal cpu_data       : std_logic_vector(7 downto 0);
-    signal data_bus       : std_logic_vector(7 downto 0); 
+    signal WR_n          : std_logic;
+    signal RD_n          : std_logic;
+    signal address_bus   : std_logic_vector(15 downto 0);
+    signal cpu_data      : std_logic_vector(7 downto 0);
+    signal data_bus      : std_logic_vector(7 downto 0);
 
-    signal sfdc_data      : std_logic_vector(7 downto 0);
-    signal fdc_data       : std_logic_vector(7 downto 0);
-    signal ff_data        : std_logic_vector(7 downto 0);
-    signal video_data     : std_logic_vector(7 downto 0);
-    signal kbd_data       : std_logic_vector(7 downto 0);
-    signal basic1_data    : std_logic_vector(7 downto 0);
-    signal basic2v11_data : std_logic_vector(7 downto 0);
-    signal basic2v12_data : std_logic_vector(7 downto 0);
-    signal basic2v13_data : std_logic_vector(7 downto 0);
-    signal diag_data      : std_logic_vector(7 downto 0);
-    signal ram_data       : std_logic_vector(7 downto 0);
-    signal serial_data    : std_logic_vector(7 downto 0);
-    signal printer_data   : std_logic_vector(7 downto 0);
-    signal monrom_data    : std_logic_vector(7 downto 0);
+    signal sfdc_data     : std_logic_vector(7 downto 0);
+    signal fdc_data      : std_logic_vector(7 downto 0);
+    signal ff_data       : std_logic_vector(7 downto 0);
+    signal video_data    : std_logic_vector(7 downto 0);
+    signal kbd_data      : std_logic_vector(7 downto 0);
+    signal model1_data   : std_logic_vector(7 downto 0);
+    signal ram_data      : std_logic_vector(7 downto 0);
+    signal serial_data   : std_logic_vector(7 downto 0);
+    signal printer_data  : std_logic_vector(7 downto 0);
+    signal monrom_data   : std_logic_vector(7 downto 0);
 
-    signal MREQ_n         : std_logic :='1';
-    signal IORQ_n         : std_logic :='1';
+    signal MREQ_n        : std_logic :='1';
+    signal IORQ_n        : std_logic :='1';
      
-    signal sfdc_cs_n      : std_logic :='1';
-    signal fdc_cs_n       : std_logic :='1';
-    signal drvsel_cs_n    : std_logic :='1';
-    signal ff_cs_n        : std_logic :='1';
-    signal ram_cs_n       : std_logic :='1';
-    signal kbd_cs_n       : std_logic :='1';
-    signal basic1_cs_n    : std_logic :='1';
-    signal basic2v11_cs_n : std_logic :='1';
-    signal basic2v12_cs_n : std_logic :='1';
-    signal basic2v13_cs_n : std_logic :='1';
-    signal diag_cs_n      : std_logic :='1';
-    signal video_cs_n     : std_logic :='1';
-    signal serial_cs_n    : std_logic :='1';
-    signal printer_cs_n   : std_logic :='1';
-    signal monrom_cs_n    : std_logic :='1';
-    signal monram_cs_n    : std_logic :='1';
+    signal sfdc_cs_n     : std_logic :='1';
+    signal fdc_cs_n      : std_logic :='1';
+    signal drvsel_cs_n   : std_logic :='1';
+    signal ff_cs_n       : std_logic :='1';
+    signal ram_cs_n      : std_logic :='1';
+    signal kbd_cs_n      : std_logic :='1';
+    signal model1_cs_n   : std_logic :='1';
+    signal video_cs_n    : std_logic :='1';
+    signal serial_cs_n   : std_logic :='1';
+    signal printer_cs_n  : std_logic :='1';
+    signal monrom_cs_n   : std_logic :='1';
+    signal monram_cs_n   : std_logic :='1';
 
-    signal cpu_clk        : std_logic;
-    signal serial_clk     : std_logic;
-    signal uart_clk       : std_logic;
-    signal rtc_clk        : std_logic;
-    signal video_clk      : std_logic;
+    signal cpu_clk       : std_logic;
+    signal serial_clk    : std_logic;
+    signal uart_clk      : std_logic;
+    signal rtc_clk       : std_logic;
+    signal video_clk     : std_logic;
  
-    signal rtc_clk_prev   : std_logic;
-    signal rtc_cnt        : integer range 0 to 15 := 0;
+    signal rtc_clk_prev  : std_logic;
+    signal rtc_cnt       : integer range 0 to 15 := 0;
     
-    signal z80_int        : std_logic;
-    signal rtc_int        : std_logic;
+    signal z80_int       : std_logic;
+    signal rtc_int       : std_logic;
     
     signal count_down    : integer range 0 to 31 := 0;
     signal display       : std_logic_vector(23 downto 0);
@@ -373,11 +346,7 @@ architecture struct of TRS80 is
     signal serial_in     : std_logic;
     signal serial_out    : std_logic;
     
-    signal lowercase_mod : std_logic := '0';
-    signal rom_sel       : std_logic_vector(2 downto 0) := "001";
-    signal rom_sel_prev  : std_logic_vector(2 downto 0) := "000";
-    signal rom_sel_rst_n : std_logic;
-     
+    
 begin
 
     pll1: pll                          port map(areset       => not reset_n,
@@ -447,31 +416,21 @@ begin
                                                 di           => data_bus,
                                                 do           => cpu_data);
                                                 
-    rom0: diag                         port map(clock        => cpu_clk,
+    rom1: diag                         port map(clock        => cpu_clk,
                                                 address      => address_bus(11 downto 0),
-                                                cs_n         => diag_cs_n,        
-                                                data_out     => diag_data);                                                
+                                                cs_n         => model1_cs_n,        
+                                                data_out     => model1_data);                                                
                                                 
-    rom1: basic1                       port map(clock        => cpu_clk,
-                                                address      => address_bus(11 downto 0),
-                                                cs_n         => basic1_cs_n,        
-                                                data_out     => basic1_data);
+--    rom1: model1v1                     port map(clock        => cpu_clk,
+--                                                address      => address_bus(11 downto 0),
+--                                                cs_n         => model1_cs_n,        
+--                                                data_out     => model1_data);
                                             
-    rom2: basic2v11                    port map(clock        => cpu_clk,
-                                                address      => address_bus(13 downto 0),
-                                                cs_n         => basic2v11_cs_n,        
-                                                data_out     => basic2v11_data);
+--    rom1: model1v2                     port map(clock        => cpu_clk,
+--                                                address      => address_bus(13 downto 0),
+--                                                cs_n         => model1_cs_n,        
+--                                                data_out     => model1_data);
 
-    rom3: basic2v12                    port map(clock        => cpu_clk,
-                                                address      => address_bus(13 downto 0),
-                                                cs_n         => basic2v12_cs_n,        
-                                                data_out     => basic2v12_data);
-
-    rom4: basic2v13                    port map(clock        => cpu_clk,
-                                                address      => address_bus(13 downto 0),
-                                                cs_n         => basic2v13_cs_n,        
-                                                data_out     => basic2v13_data);
-                                                
     mon: trs80mon                      port map(clock        => cpu_clk,
                                                 address      => address_bus(10 downto 0),
                                                 cs_n         => monrom_cs_n,        
@@ -527,7 +486,6 @@ begin
                                        port map(reset_n            => reset_n,
                                                 video_clock        => video_clk, 
                                                 mode               => video_mode,
-                                                lowercase          => lowercase_mod,
                                                 phi2               => cpu_clk,
                                                 rw                 => WR_n,
                                                 address_bus        => address_bus,
@@ -564,7 +522,7 @@ begin
                                                 rx                 => serial_in,
                                                 tx                 => serial_out);
 
-    dsk: trs80_fdc                     port map(m_clk              => cpu_clk,
+        dsk: trs80_fdc                 port map(m_clk              => cpu_clk,
                                                 m_reset_n          => reset_n,
                                                 m_ds_cs_n          => drvsel_cs_n,
                                                 m_cs_n             => fdc_cs_n,
@@ -591,50 +549,38 @@ begin
 --                                                byte_out           => k7_byte,
 --                                                byte_strobe        => k7_byte_strobe);
 
---    reset_n <= KEY(0) and not kbd_reset;
-    reset_n        <= KEY(0) and not kbd_reset and rom_sel_rst_n;    
+    reset_n <= KEY(0) and not kbd_reset;
     
 --  Note:  MONROM is a monitor to take debug the TRS80 from a serial port    
-
-
-
     
-    basic1_cs_n    <= '0' when address_bus(15 downto 12)  = x"0"                                             and (MREQ_n = '0') and rom_sel = "000"  else '1';  -- model 1 basic level 1
-    basic2v11_cs_n <= '0' when address_bus(15 downto 12)  < x"3"                                             and (MREQ_n = '0') and rom_sel = "001"  else '1';  -- model 1 basic level 2  (1.1)
-    basic2v12_cs_n <= '0' when address_bus(15 downto 12)  < x"3"                                             and (MREQ_n = '0') and rom_sel = "010"  else '1';  -- model 1 basic level 2  (1.2)
-    basic2v13_cs_n <= '0' when address_bus(15 downto 12)  < x"3"                                             and (MREQ_n = '0') and rom_sel = "011"  else '1';  -- model 1 basic level 2  (1.3)
-    diag_cs_n      <= '0' when address_bus(15 downto 12)  < x"3"                                             and (MREQ_n = '0') and rom_sel = "111"  else '1';  -- Adrian's diag
-    monrom_cs_n    <= '0' when address_bus(15 downto 8)  >= x"30"    and address_bus(15 downto 8) < x"36"    and (MREQ_n = '0')                             else '1';  -- remote monitor rom
-    monram_cs_n    <= '0' when address_bus(15 downto 8)  >= x"36"    and address_bus(15 downto 8) < x"37"    and (MREQ_n = '0')                             else '1';  -- remote monitor ram
-    ram_cs_n       <= '0' when address_bus(15 downto 12) >= x"4"                                             and (MREQ_n = '0')                             else '1';
-    kbd_cs_n       <= '0' when address_bus(15 downto 10)  = "001110"                                         and (MREQ_n = '0')                             else '1';
-    video_cs_n     <= '0' when address_bus(15 downto 8)  >= x"3C"    and address_bus(15 downto 8)  < x"40"   and (MREQ_n = '0')                             else '1';
-    drvsel_cs_n    <= '0' when address_bus(15 downto 0)  >= x"37E0"  and address_bus(15 downto 0) <= x"37E1" and (MREQ_n = '0')                             else '1';
-    printer_cs_n   <= '0' when address_bus(15 downto 0)  >= x"37E8"  and address_bus(15 downto 0) <= x"37E9" and (MREQ_n = '0')                             else '1';
-    fdc_cs_n       <= '0' when address_bus(15 downto 0)  >= x"37EC"  and address_bus(15 downto 0) <= x"37EF" and (MREQ_n = '0')                             else '1';
+    model1_cs_n   <= '0' when address_bus(15 downto 12)  < x"3"                                             and (MREQ_n = '0') else '1';
+    monrom_cs_n   <= '0' when address_bus(15 downto 8)  >= x"30"    and address_bus(15 downto 8) < x"36"    and (MREQ_n = '0') else '1';  -- remote monitor rom
+    monram_cs_n   <= '0' when address_bus(15 downto 8)  >= x"36"    and address_bus(15 downto 8) < x"37"    and (MREQ_n = '0') else '1';  -- remote monitor ram
+    ram_cs_n      <= '0' when address_bus(15 downto 12) >= x"4"                                             and (MREQ_n = '0') else '1';
+    kbd_cs_n      <= '0' when address_bus(15 downto 10)  = "001110"                                         and (MREQ_n = '0') else '1';
+    video_cs_n    <= '0' when address_bus(15 downto 8)  >= x"3C"    and address_bus(15 downto 8)  < x"40"   and (MREQ_n = '0') else '1';
+    drvsel_cs_n   <= '0' when address_bus(15 downto 0)  >= x"37E0"  and address_bus(15 downto 0) <= x"37E1" and (MREQ_n = '0') else '1';
+    printer_cs_n  <= '0' when address_bus(15 downto 0)  >= x"37E8"  and address_bus(15 downto 0) <= x"37E9" and (MREQ_n = '0') else '1';
+    fdc_cs_n      <= '0' when address_bus(15 downto 0)  >= x"37EC"  and address_bus(15 downto 0) <= x"37EF" and (MREQ_n = '0') else '1';
     
-    serial_cs_n   <= '0' when address_bus(7  downto 0)  >= x"E8"    and address_bus(7  downto 0) <= x"EB"   and (IORQ_n = '0')                                 else '1';
-    ff_cs_n       <= '0' when address_bus(7  downto 0)   = x"FF"                                            and (IORQ_n = '0')                                 else '1';
+    serial_cs_n   <= '0' when address_bus(7  downto 0)  >= x"E8"    and address_bus(7  downto 0) <= x"EB"   and (IORQ_n = '0') else '1';
+    ff_cs_n       <= '0' when address_bus(7  downto 0)   = x"FF"                                            and (IORQ_n = '0') else '1';
     
     -- temporary for fdc tests
-    sfdc_cs_n     <= '0' when address_bus(7  downto 0)  >= x"40"    and address_bus(7 downto 0)  <= x"47"   and (IORQ_n = '0')                                 else '1';
+    sfdc_cs_n     <= '0' when address_bus(7  downto 0)  >= x"40"    and address_bus(7 downto 0)  <= x"47"   and (IORQ_n = '0') else '1';
     
-    data_bus <= cpu_data       when WR_n = '0' else  -- CPU is writing
-                basic1_data    when (basic1_cs_n    = '0' and MREQ_n = '0' and RD_n = '0') else -- model 1 level 2 v 1.1 basic rom
-                basic2v11_data when (basic2v11_cs_n = '0' and MREQ_n = '0' and RD_n = '0') else -- model 1 level 2 v 1.1 basic rom
-                basic2v12_data when (basic2v12_cs_n = '0' and MREQ_n = '0' and RD_n = '0') else -- model 1 level 2 v 1.2 basic rom
-                basic2v13_data when (basic2v13_cs_n = '0' and MREQ_n = '0' and RD_n = '0') else -- model 1 level 2 v 1.3 basic rom
-                diag_data      when (diag_cs_n      = '0' and MREQ_n = '0' and RD_n = '0') else -- Adrian's diag
-                monrom_data    when (monrom_cs_n    = '0' and MREQ_n = '0' and RD_n = '0') else -- trs80mon
-                ram_data       when (monram_cs_n    = '0' and MREQ_n = '0' and RD_n = '0') else 
-                ram_data       when (ram_cs_n       = '0' and MREQ_n = '0' and RD_n = '0') else
-                video_data     when (video_cs_n     = '0' and MREQ_n = '0' and RD_n = '0') else
-                kbd_data       when (kbd_cs_n       = '0' and MREQ_n = '0' and RD_n = '0') else
-                printer_data   when (printer_cs_n   = '0' and MREQ_n = '0' and RD_n = '0') else
+    data_bus <= cpu_data      when WR_n = '0' else  -- CPU is writing
+                model1_data   when (model1_cs_n   = '0' and MREQ_n = '0' and RD_n = '0') else
+                monrom_data   when (monrom_cs_n   = '0' and MREQ_n = '0' and RD_n = '0') else
+                ram_data      when (monram_cs_n   = '0' and MREQ_n = '0' and RD_n = '0') else -- temporary for debug
+                ram_data      when (ram_cs_n      = '0' and MREQ_n = '0' and RD_n = '0') else
+                video_data    when (video_cs_n    = '0' and MREQ_n = '0' and RD_n = '0') else
+                kbd_data      when (kbd_cs_n      = '0' and MREQ_n = '0' and RD_n = '0') else
+                printer_data  when (printer_cs_n  = '0' and MREQ_n = '0' and RD_n = '0') else
                 
-                serial_data    when (serial_cs_n    = '0' and IORQ_n = '0' and RD_n = '0') else
-                ff_data        when (ff_cs_n        = '0' and IORQ_n = '0' and RD_n = '0') else
-                sfdc_data      when (sfdc_cs_n      = '0' and IORQ_n = '0' and RD_n = '0') else  -- temporary for debug
+                serial_data   when (serial_cs_n   = '0' and IORQ_n = '0' and RD_n = '0') else
+                ff_data       when (ff_cs_n       = '0' and IORQ_n = '0' and RD_n = '0') else
+                sfdc_data     when (sfdc_cs_n     = '0' and IORQ_n = '0' and RD_n = '0') else  -- temporary for debug
                 x"FF";
 
     -- cpu_reset             
@@ -671,28 +617,7 @@ begin
         end if;
     end process;    
     
-    process(MAX10_CLK1_50)
-    begin
-        if rising_edge(MAX10_CLK1_50) then
-            rom_sel_prev <= SW(2 downto 0);
-            if rom_sel_prev /= SW(2 downto 0) then
-                rom_sel_rst_n <= '0';
-            else 
-                rom_sel_rst_n <= '1';
-            end if;
-       end if;
-    end process;
-
-    process(reset_n)
-    begin
-        if rising_edge(reset_n) then
-            rom_sel <= SW(2 downto 0);
-       end if;
-    end process;
     
-
-    lowercase_mod  <= SW(9);          -- live, no reset
-
     VGA_R                  <= video_rgb(11 downto 8);
     VGA_G                  <= video_rgb(7  downto 4);
     VGA_B                  <= video_rgb(3  downto 0);

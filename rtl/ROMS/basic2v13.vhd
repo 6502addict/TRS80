@@ -1,8 +1,17 @@
+-- =============================================================================
+-- File    : basic2v13.vhd
+-- Version : 1.1
+-- Date    : 2026-04-27
+-- Author  : didier
+-- Changes : 1.0 - Initial import of Trs80 model 1 basic level 2 Version 1.3
+-- =============================================================================
+
+
 library ieee;
     use ieee.std_logic_1164.all;
     use ieee.numeric_std.all;
 
-entity model1v2 is
+entity basic2v13 is
     port (
         clock:    in std_logic;
         address:  in std_logic_vector(13 downto 0); 
@@ -11,7 +20,7 @@ entity model1v2 is
     );
 end entity;
 
-architecture rtl of model1v2 is
+architecture rtl of basic2v13 is
     -- ROM from $0000 to $3FFF (16384 bytes)
     type rom_type is array(0 to 16383) of std_logic_vector(7 downto 0);
     signal rom : rom_type := (
@@ -26,7 +35,7 @@ architecture rtl of model1v2 is
         X"C3", X"D9", X"05", X"C9", X"00", X"00", X"C3", X"C2", 
         X"03", X"CD", X"2B", X"00", X"B7", X"C0", X"18", X"F9", 
         X"0D", X"0D", X"1F", X"1F", X"01", X"01", X"5B", X"1B", 
-        X"0A", X"1A", X"08", X"18", X"09", X"19", X"20", X"20", 
+        X"0A", X"00", X"08", X"18", X"09", X"19", X"20", X"20", 
         X"0B", X"78", X"B1", X"20", X"FB", X"C9", X"31", X"00", 
         X"06", X"3A", X"EC", X"37", X"3C", X"FE", X"02", X"D2", 
         X"00", X"00", X"C3", X"CC", X"06", X"11", X"80", X"40", 
@@ -46,13 +55,13 @@ architecture rtl of model1v2 is
         X"8F", X"46", X"77", X"BE", X"70", X"20", X"CE", X"2B", 
         X"11", X"14", X"44", X"DF", X"DA", X"7A", X"19", X"11", 
         X"CE", X"FF", X"22", X"B1", X"40", X"19", X"22", X"A0", 
-        X"40", X"CD", X"4D", X"1B", X"21", X"11", X"01", X"CD", 
+        X"40", X"CD", X"4D", X"1B", X"21", X"0E", X"01", X"CD", 
         X"A7", X"28", X"C3", X"19", X"1A", X"4D", X"45", X"4D", 
-        X"4F", X"52", X"59", X"20", X"53", X"49", X"5A", X"45", 
-        X"00", X"52", X"41", X"44", X"49", X"4F", X"20", X"53", 
-        X"48", X"41", X"43", X"4B", X"20", X"4C", X"45", X"56", 
-        X"45", X"4C", X"20", X"49", X"49", X"20", X"42", X"41", 
-        X"53", X"49", X"43", X"0D", X"00", X"1E", X"2C", X"C3", 
+        X"20", X"53", X"49", X"5A", X"45", X"00", X"52", X"2F", 
+        X"53", X"20", X"4C", X"32", X"20", X"42", X"41", X"53", 
+        X"49", X"43", X"0D", X"00", X"C5", X"01", X"00", X"05", 
+        X"CD", X"60", X"00", X"C1", X"0A", X"A3", X"C8", X"7A", 
+        X"07", X"07", X"C3", X"FE", X"03", X"1E", X"2C", X"C3", 
         X"A2", X"19", X"D7", X"AF", X"01", X"3E", X"80", X"01", 
         X"3E", X"01", X"F5", X"CF", X"28", X"CD", X"1C", X"2B", 
         X"FE", X"80", X"D2", X"4A", X"1E", X"F5", X"CF", X"2C", 
@@ -88,8 +97,8 @@ architecture rtl of model1v2 is
         X"0A", X"32", X"3F", X"3C", X"C9", X"C5", X"E5", X"06", 
         X"08", X"CD", X"41", X"02", X"10", X"FB", X"E1", X"C1", 
         X"C9", X"C5", X"F5", X"DB", X"FF", X"17", X"30", X"FB", 
-        X"06", X"41", X"10", X"FE", X"CD", X"1E", X"02", X"06", 
-        X"76", X"10", X"FE", X"DB", X"FF", X"47", X"F1", X"CB", 
+        X"06", X"60", X"10", X"FE", X"CD", X"1E", X"02", X"06", 
+        X"85", X"10", X"FE", X"DB", X"FF", X"47", X"F1", X"CB", 
         X"10", X"17", X"F5", X"CD", X"1E", X"02", X"F1", X"C1", 
         X"C9", X"CD", X"64", X"02", X"E5", X"C5", X"D5", X"F5", 
         X"0E", X"08", X"57", X"CD", X"D9", X"01", X"7A", X"07", 
@@ -142,7 +151,7 @@ architecture rtl of model1v2 is
         X"E1", X"C1", X"C9", X"21", X"36", X"40", X"01", X"01", 
         X"38", X"16", X"00", X"0A", X"5F", X"AE", X"73", X"A3", 
         X"20", X"08", X"14", X"2C", X"CB", X"01", X"F2", X"EB", 
-        X"03", X"C9", X"5F", X"7A", X"07", X"07", X"07", X"57", 
+        X"03", X"C9", X"5F", X"C3", X"1C", X"01", X"07", X"57", 
         X"0E", X"01", X"79", X"A3", X"20", X"05", X"14", X"CB", 
         X"01", X"18", X"F7", X"3A", X"80", X"38", X"47", X"7A", 
         X"C6", X"40", X"FE", X"60", X"30", X"13", X"CB", X"08", 
@@ -600,7 +609,7 @@ architecture rtl of model1v2 is
         X"0A", X"18", X"06", X"11", X"6C", X"13", X"CD", X"49", 
         X"0A", X"F2", X"4B", X"12", X"F1", X"CD", X"0B", X"0F", 
         X"F5", X"18", X"E2", X"F1", X"CD", X"18", X"0F", X"F5", 
-        X"CD", X"4F", X"12", X"F1", X"B7", X"D1", X"C9", X"E7", 
+        X"CD", X"4F", X"12", X"F1", X"D1", X"B7", X"C9", X"E7", 
         X"EA", X"5E", X"12", X"01", X"74", X"94", X"11", X"F8", 
         X"23", X"CD", X"0C", X"0A", X"18", X"06", X"11", X"74", 
         X"13", X"CD", X"49", X"0A", X"E1", X"F2", X"43", X"12", 
@@ -1052,24 +1061,24 @@ architecture rtl of model1v2 is
         X"DA", X"C2", X"1E", X"C3", X"5F", X"1D", X"16", X"01", 
         X"CD", X"05", X"1F", X"B7", X"C8", X"D7", X"FE", X"95", 
         X"20", X"F6", X"15", X"20", X"F3", X"18", X"E8", X"3E", 
-        X"01", X"32", X"9C", X"40", X"C3", X"9B", X"20", X"CD", 
-        X"CA", X"41", X"FE", X"40", X"20", X"19", X"CD", X"01", 
-        X"2B", X"FE", X"04", X"D2", X"4A", X"1E", X"E5", X"21", 
-        X"00", X"3C", X"19", X"22", X"20", X"40", X"7B", X"E6", 
-        X"3F", X"32", X"A6", X"40", X"E1", X"CF", X"2C", X"FE", 
-        X"23", X"20", X"08", X"CD", X"84", X"02", X"3E", X"80", 
-        X"32", X"9C", X"40", X"2B", X"D7", X"CC", X"FE", X"20", 
-        X"CA", X"69", X"21", X"FE", X"BF", X"CA", X"BD", X"2C", 
-        X"FE", X"BC", X"CA", X"37", X"21", X"E5", X"FE", X"2C", 
-        X"CA", X"08", X"21", X"FE", X"3B", X"CA", X"64", X"21", 
-        X"C1", X"CD", X"37", X"23", X"E5", X"E7", X"28", X"32", 
+        X"01", X"32", X"9C", X"40", X"C3", X"7C", X"20", X"CD", 
+        X"CA", X"41", X"FE", X"23", X"20", X"06", X"CD", X"84", 
+        X"02", X"32", X"9C", X"40", X"2B", X"D7", X"CC", X"FE", 
+        X"20", X"CA", X"69", X"21", X"F6", X"20", X"FE", X"60", 
+        X"20", X"1B", X"CD", X"01", X"2B", X"FE", X"04", X"D2", 
+        X"4A", X"1E", X"E5", X"21", X"00", X"3C", X"19", X"22", 
+        X"20", X"40", X"7B", X"E6", X"3F", X"32", X"A6", X"40", 
+        X"E1", X"CF", X"2C", X"18", X"C7", X"7E", X"FE", X"BF", 
+        X"CA", X"BD", X"2C", X"FE", X"BC", X"CA", X"37", X"21", 
+        X"E5", X"FE", X"2C", X"28", X"53", X"FE", X"3B", X"28", 
+        X"5E", X"CD", X"37", X"23", X"E3", X"E7", X"28", X"32", 
         X"CD", X"BD", X"0F", X"CD", X"65", X"28", X"CD", X"CD", 
         X"41", X"2A", X"21", X"41", X"3A", X"9C", X"40", X"B7", 
         X"FA", X"E9", X"20", X"28", X"08", X"3A", X"9B", X"40", 
         X"86", X"FE", X"84", X"18", X"09", X"3A", X"9D", X"40", 
         X"47", X"3A", X"A6", X"40", X"86", X"B8", X"D4", X"FE", 
         X"20", X"CD", X"AA", X"28", X"3E", X"20", X"CD", X"2A", 
-        X"03", X"B7", X"CC", X"AA", X"28", X"E1", X"C3", X"9B", 
+        X"03", X"B7", X"CC", X"AA", X"28", X"E1", X"C3", X"7C", 
         X"20", X"3A", X"A6", X"40", X"B7", X"C8", X"3E", X"0D", 
         X"CD", X"2A", X"03", X"CD", X"D0", X"41", X"AF", X"C9", 
         X"CD", X"D3", X"41", X"3A", X"9C", X"40", X"B7", X"F2", 
@@ -1078,12 +1087,12 @@ architecture rtl of model1v2 is
         X"C3", X"2B", X"21", X"3A", X"9E", X"40", X"47", X"3A", 
         X"A6", X"40", X"B8", X"D4", X"FE", X"20", X"30", X"34", 
         X"D6", X"10", X"30", X"FC", X"2F", X"18", X"23", X"CD", 
-        X"1B", X"2B", X"E6", X"3F", X"5F", X"CF", X"29", X"2B", 
+        X"1B", X"2B", X"E6", X"7F", X"5F", X"CF", X"29", X"2B", 
         X"E5", X"CD", X"D3", X"41", X"3A", X"9C", X"40", X"B7", 
         X"FA", X"4A", X"1E", X"CA", X"53", X"21", X"3A", X"9B", 
         X"40", X"18", X"03", X"3A", X"A6", X"40", X"2F", X"83", 
         X"30", X"0A", X"3C", X"47", X"3E", X"20", X"CD", X"2A", 
-        X"03", X"05", X"20", X"FA", X"E1", X"D7", X"C3", X"A0", 
+        X"03", X"05", X"20", X"FA", X"E1", X"D7", X"C3", X"81", 
         X"20", X"3A", X"9C", X"40", X"B7", X"FC", X"F8", X"01", 
         X"AF", X"32", X"9C", X"40", X"CD", X"BE", X"41", X"C9", 
         X"3F", X"52", X"45", X"44", X"4F", X"0D", X"00", X"3A", 
@@ -1426,12 +1435,12 @@ architecture rtl of model1v2 is
         X"D3", X"CD", X"64", X"02", X"CD", X"61", X"02", X"1A", 
         X"CD", X"64", X"02", X"2A", X"A4", X"40", X"EB", X"2A", 
         X"F9", X"40", X"1A", X"13", X"CD", X"64", X"02", X"DF", 
-        X"20", X"F8", X"CD", X"F8", X"01", X"E1", X"C9", X"CD", 
-        X"93", X"02", X"7E", X"D6", X"B2", X"28", X"02", X"AF", 
-        X"01", X"2F", X"23", X"F5", X"2B", X"D7", X"3E", X"00", 
-        X"28", X"07", X"CD", X"37", X"23", X"CD", X"13", X"2A", 
-        X"1A", X"6F", X"F1", X"B7", X"67", X"22", X"21", X"41", 
-        X"CC", X"4D", X"1B", X"2A", X"21", X"41", X"EB", X"06", 
+        X"20", X"F8", X"CD", X"F8", X"01", X"E1", X"C9", X"D6", 
+        X"B2", X"28", X"02", X"AF", X"01", X"2F", X"23", X"F5", 
+        X"7E", X"B7", X"28", X"07", X"CD", X"37", X"23", X"CD", 
+        X"13", X"2A", X"1A", X"6F", X"F1", X"B7", X"67", X"22", 
+        X"21", X"41", X"CC", X"4D", X"1B", X"21", X"00", X"00", 
+        X"CD", X"93", X"02", X"2A", X"21", X"41", X"EB", X"06", 
         X"03", X"CD", X"35", X"02", X"D6", X"D3", X"20", X"F7", 
         X"10", X"F7", X"CD", X"35", X"02", X"1C", X"1D", X"28", 
         X"03", X"BB", X"20", X"37", X"2A", X"A4", X"40", X"06", 
